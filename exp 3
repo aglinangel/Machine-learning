@@ -1,0 +1,202 @@
+# ID3 Decision Tree Algorithm
+# Demonstration using Play Tennis Dataset
+
+import pandas as pd
+import math
+
+# ---------------------------------------------------------
+# STEP 1: Create the Dataset
+# ---------------------------------------------------------
+
+data = {
+    'Outlook': [
+        'Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain',
+        'Rain', 'Overcast', 'Sunny', 'Sunny', 'Rain',
+        'Sunny', 'Overcast', 'Overcast', 'Rain'
+    ],
+    
+    'Temperature': [
+        'Hot', 'Hot', 'Hot', 'Mild', 'Cool',
+        'Cool', 'Cool', 'Mild', 'Cool', 'Mild',
+        'Mild', 'Mild', 'Hot', 'Mild'
+    ],
+    
+    'Humidity': [
+        'High', 'High', 'High', 'High', 'Normal',
+        'Normal', 'Normal', 'High', 'Normal', 'Normal',
+        'Normal', 'High', 'Normal', 'High'
+    ],
+    
+    'Wind': [
+        'Weak', 'Strong', 'Weak', 'Weak', 'Weak',
+        'Strong', 'Strong', 'Weak', 'Weak', 'Weak',
+        'Strong', 'Strong', 'Weak', 'Strong'
+    ],
+    
+    'PlayTennis': [
+        'No', 'No', 'Yes', 'Yes', 'Yes',
+        'No', 'Yes', 'No', 'Yes', 'Yes',
+        'Yes', 'Yes', 'Yes', 'No'
+    ]
+}
+
+df = pd.DataFrame(data)
+
+print("PLAY TENNIS DATASET")
+print("=" * 50)
+print(df)
+
+# ---------------------------------------------------------
+# STEP 2: Calculate Entropy
+# ---------------------------------------------------------
+
+def entropy(target):
+    values = target.value_counts()
+    total = len(target)
+
+    ent = 0
+
+    for count in values:
+        probability = count / total
+        ent -= probability * math.log2(probability)
+
+    return ent
+
+
+# ---------------------------------------------------------
+# STEP 3: Calculate Information Gain
+# ---------------------------------------------------------
+
+def information_gain(data, attribute, target):
+    
+    total_entropy = entropy(data[target])
+
+    values = data[attribute].unique()
+
+    weighted_entropy = 0
+
+    for value in values:
+        subset = data[data[attribute] == value]
+        weighted_entropy += (
+            len(subset) / len(data)
+        ) * entropy(subset[target])
+
+    return total_entropy - weighted_entropy
+
+
+# ---------------------------------------------------------
+# STEP 4: Implement ID3 Algorithm
+# ---------------------------------------------------------
+
+def id3(data, attributes, target):
+
+    # If all examples belong to one class
+    if len(data[target].unique()) == 1:
+        return data[target].iloc[0]
+
+    # If no attributes are left
+    if len(attributes) == 0:
+        return data[target].mode()[0]
+
+    # Calculate information gain
+    gains = {
+        attribute: information_gain(data, attribute, target)
+        for attribute in attributes
+    }
+
+    # Select attribute with highest information gain
+    best_attribute = max(gains, key=gains.get)
+
+    tree = {best_attribute: {}}
+
+    remaining_attributes = [
+        attribute for attribute in attributes
+        if attribute != best_attribute
+    ]
+
+    # Create branches
+    for value in data[best_attribute].unique():
+
+        subset = data[data[best_attribute] == value]
+
+        if len(subset) == 0:
+            tree[best_attribute][value] = data[target].mode()[0]
+
+        else:
+            tree[best_attribute][value] = id3(
+                subset,
+                remaining_attributes,
+                target
+            )
+
+    return tree
+
+
+# ---------------------------------------------------------
+# STEP 5: Build Decision Tree
+# ---------------------------------------------------------
+
+attributes = list(df.columns[:-1])
+target = 'PlayTennis'
+
+decision_tree = id3(df, attributes, target)
+
+print("\n\nDECISION TREE")
+print("=" * 50)
+print(decision_tree)
+
+
+# ---------------------------------------------------------
+# STEP 6: Display Information Gain
+# ---------------------------------------------------------
+
+print("\n\nINFORMATION GAIN")
+print("=" * 50)
+
+for attribute in attributes:
+    gain = information_gain(df, attribute, target)
+    print(f"{attribute}: {gain:.4f}")
+
+
+# ---------------------------------------------------------
+# STEP 7: Classification Function
+# ---------------------------------------------------------
+
+def classify(tree, sample):
+
+    # If tree is already a class label
+    if not isinstance(tree, dict):
+        return tree
+
+    # Get root attribute
+    attribute = next(iter(tree))
+
+    value = sample[attribute]
+
+    # Follow the corresponding branch
+    if value in tree[attribute]:
+        return classify(tree[attribute][value], sample)
+
+    else:
+        return "Unknown"
+
+
+# ---------------------------------------------------------
+# STEP 8: Classify a New Sample
+# ---------------------------------------------------------
+
+new_sample = {
+    'Outlook': 'Sunny',
+    'Temperature': 'Cool',
+    'Humidity': 'High',
+    'Wind': 'Strong'
+}
+
+prediction = classify(decision_tree, new_sample)
+
+print("\n\nNEW SAMPLE")
+print("=" * 50)
+
+print(new_sample)
+
+print("\nPredicted Class:", prediction)
