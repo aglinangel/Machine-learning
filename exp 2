@@ -1,0 +1,156 @@
+# Candidate-Elimination Algorithm
+# Import required libraries
+
+import pandas as pd
+
+# ---------------------------------------------------------
+# STEP 1: Create a CSV file
+# ---------------------------------------------------------
+
+data = {
+    'Sky': ['Sunny', 'Sunny', 'Rainy', 'Sunny'],
+    'AirTemp': ['Warm', 'Warm', 'Cold', 'Warm'],
+    'Humidity': ['Normal', 'High', 'High', 'High'],
+    'Wind': ['Strong', 'Strong', 'Strong', 'Weak'],
+    'Water': ['Warm', 'Warm', 'Warm', 'Cool'],
+    'Forecast': ['Same', 'Same', 'Change', 'Change'],
+    'EnjoySport': ['Yes', 'Yes', 'No', 'Yes']
+}
+
+df = pd.DataFrame(data)
+
+# Save data into CSV file
+df.to_csv('training_data.csv', index=False)
+
+print("Training data saved as training_data.csv\n")
+
+# ---------------------------------------------------------
+# STEP 2: Read the CSV file
+# ---------------------------------------------------------
+
+data = pd.read_csv('training_data.csv')
+
+print("Training Data:")
+print(data)
+print()
+
+# ---------------------------------------------------------
+# STEP 3: Candidate-Elimination Algorithm
+# ---------------------------------------------------------
+
+attributes = list(data.columns[:-1])
+target = data.columns[-1]
+
+# Most specific hypothesis
+S = ['0'] * len(attributes)
+
+# Most general hypothesis
+G = [['?'] * len(attributes)]
+
+
+def covers(hypothesis, example):
+    """Check whether a hypothesis covers an example."""
+    for h, x in zip(hypothesis, example):
+        if h != '?' and h != x:
+            return False
+    return True
+
+
+def more_general_or_equal(h1, h2):
+    """Check whether h1 is more general than or equal to h2."""
+    for a, b in zip(h1, h2):
+        if a != '?' and a != b:
+            return False
+    return True
+
+
+def generalize_S(S, example):
+    """Generalize the specific boundary."""
+    S_new = S.copy()
+
+    for i in range(len(S_new)):
+        if S_new[i] == '0':
+            S_new[i] = example[i]
+        elif S_new[i] != example[i]:
+            S_new[i] = '?'
+
+    return S_new
+
+
+def specialize_G(G, S, example):
+    """Specialize the general boundary."""
+    G_new = []
+
+    for g in G:
+        for i in range(len(attributes)):
+
+            if g[i] == '?':
+                if S[i] != '?' and S[i] != '0':
+                    new_hypothesis = g.copy()
+                    new_hypothesis[i] = S[i]
+
+                    if not covers(new_hypothesis, example):
+                        G_new.append(new_hypothesis)
+
+    return G_new
+
+
+# ---------------------------------------------------------
+# Process each training example
+# ---------------------------------------------------------
+
+for index, row in data.iterrows():
+
+    example = row.iloc[:-1].tolist()
+    label = row.iloc[-1]
+
+    print(f"Example {index + 1}: {example} -> {label}")
+
+    if label == 'Yes':
+
+        # Remove hypotheses from G that do not cover positive example
+        G = [g for g in G if covers(g, example)]
+
+        # Generalize S if necessary
+        if not covers(S, example):
+            S = generalize_S(S, example)
+
+    else:
+
+        # Remove hypotheses from S that cover negative example
+        if covers(S, example):
+            # S remains unchanged; G is specialized
+            G = specialize_G(G, S, example)
+
+        else:
+            G = [g for g in G if not covers(g, example)]
+
+    # Remove G hypotheses that are less general than S
+    G = [
+        g for g in G
+        if more_general_or_equal(g, S)
+    ]
+
+    print("S =", S)
+    print("G =", G)
+    print()
+
+
+# ---------------------------------------------------------
+# STEP 4: Display Final Version Space Boundaries
+# ---------------------------------------------------------
+
+print("=" * 60)
+print("FINAL RESULT")
+print("=" * 60)
+
+print("\nSpecific Boundary (S):")
+print(S)
+
+print("\nGeneral Boundary (G):")
+
+for g in G:
+    print(g)
+
+print("\nAll hypotheses consistent with the training examples")
+print("lie between the Specific and General boundaries.")
