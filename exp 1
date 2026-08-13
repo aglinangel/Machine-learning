@@ -1,0 +1,49 @@
+# FIND-S Algorithm
+# Finding the Most Specific Hypothesis
+
+# Training dataset
+data = [
+    ['Sunny', 'Warm', 'Normal', 'Strong', 'Warm', 'Same', 'Yes'],
+    ['Sunny', 'Warm', 'High', 'Strong', 'Warm', 'Same', 'Yes'],
+    ['Rainy', 'Cold', 'High', 'Strong', 'Warm', 'Change', 'No'],
+    ['Sunny', 'Warm', 'High', 'Strong', 'Cool', 'Change', 'Yes']
+]
+
+# Function to implement FIND-S
+def find_s(data):
+    # Initialize hypothesis with the first positive example
+    hypothesis = None
+
+    for example in data:
+        attributes = example[:-1]
+        target = example[-1]
+
+        # Consider only positive examples
+        if target == 'Yes':
+
+            # First positive example becomes the initial hypothesis
+            if hypothesis is None:
+                hypothesis = attributes.copy()
+
+            else:
+                # Compare each attribute
+                for i in range(len(hypothesis)):
+                    if hypothesis[i] != attributes[i]:
+                        hypothesis[i] = '?'
+
+    return hypothesis
+
+
+# Display training data
+print("Training Data:")
+print("-" * 80)
+
+for row in data:
+    print(row)
+
+# Apply FIND-S algorithm
+final_hypothesis = find_s(data)
+
+# Display result
+print("\nFinal Most Specific Hypothesis:")
+print(final_hypothesis)
