@@ -1,0 +1,189 @@
+# ============================================================
+# CREDIT SCORE CLASSIFICATION USING MACHINE LEARNING
+# ============================================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# ------------------------------------------------------------
+# 1. CREATE DATASET
+# ------------------------------------------------------------
+
+data = {
+    'Income': [25000, 45000, 60000, 30000, 80000, 55000, 20000, 90000,
+               40000, 70000, 35000, 100000, 28000, 65000, 50000,
+               85000, 32000, 75000, 95000, 27000],
+
+    'Age': [22, 35, 45, 28, 50, 40, 21, 55, 32, 48,
+            27, 60, 25, 43, 38, 52, 29, 42, 58, 24],
+
+    'Loan_Amount': [100000, 200000, 150000, 120000, 100000, 250000,
+                    150000, 200000, 180000, 120000, 130000, 150000,
+                    140000, 160000, 190000, 110000, 170000, 150000,
+                    100000, 160000],
+
+    'Credit_History': [1, 1, 1, 0, 1, 1, 0, 1, 1, 1,
+                       0, 1, 0, 1, 1, 1, 0, 1, 1, 0],
+
+    'Late_Payments': [5, 1, 0, 6, 0, 2, 7, 0, 1, 0,
+                      5, 0, 6, 1, 2, 0, 5, 1, 0, 7],
+
+    'Credit_Score': [
+        'Poor', 'Good', 'Good', 'Poor', 'Excellent',
+        'Good', 'Poor', 'Excellent', 'Good', 'Excellent',
+        'Poor', 'Excellent', 'Poor', 'Good', 'Good',
+        'Excellent', 'Poor', 'Good', 'Excellent', 'Poor'
+    ]
+}
+
+df = pd.DataFrame(data)
+
+print("========== CREDIT SCORE DATASET ==========")
+print(df)
+
+# ------------------------------------------------------------
+# 2. SEPARATE INPUT AND OUTPUT
+# ------------------------------------------------------------
+
+X = df.drop('Credit_Score', axis=1)
+y = df['Credit_Score']
+
+# Encode target labels
+label_encoder = LabelEncoder()
+y_encoded = label_encoder.fit_transform(y)
+
+print("\nCredit Score Classes:")
+print(label_encoder.classes_)
+
+# ------------------------------------------------------------
+# 3. SPLIT DATA INTO TRAINING AND TESTING
+# ------------------------------------------------------------
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y_encoded,
+    test_size=0.25,
+    random_state=42,
+    stratify=y_encoded
+)
+
+# ------------------------------------------------------------
+# 4. TRAIN RANDOM FOREST CLASSIFIER
+# ------------------------------------------------------------
+
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+model.fit(X_train, y_train)
+
+print("\nModel training completed successfully!")
+
+# ------------------------------------------------------------
+# 5. PREDICT TEST DATA
+# ------------------------------------------------------------
+
+y_pred = model.predict(X_test)
+
+# ------------------------------------------------------------
+# 6. CALCULATE ACCURACY
+# ------------------------------------------------------------
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\n========== MODEL PERFORMANCE ==========")
+print("Accuracy:", round(accuracy * 100, 2), "%")
+
+# ------------------------------------------------------------
+# 7. CLASSIFICATION REPORT
+# ------------------------------------------------------------
+
+print("\nClassification Report:")
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=label_encoder.classes_,
+        zero_division=0
+    )
+)
+
+# ------------------------------------------------------------
+# 8. CONFUSION MATRIX
+# ------------------------------------------------------------
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+
+plt.figure(figsize=(6, 5))
+plt.imshow(cm)
+
+plt.title("Credit Score Classification - Confusion Matrix")
+plt.xlabel("Predicted Class")
+plt.ylabel("Actual Class")
+plt.colorbar()
+
+plt.xticks(
+    range(len(label_encoder.classes_)),
+    label_encoder.classes_
+)
+
+plt.yticks(
+    range(len(label_encoder.classes_)),
+    label_encoder.classes_
+)
+
+plt.show()
+
+# ------------------------------------------------------------
+# 9. PREDICT CREDIT SCORE FOR A NEW CUSTOMER
+# ------------------------------------------------------------
+
+new_customer = pd.DataFrame({
+    'Income': [75000],
+    'Age': [42],
+    'Loan_Amount': [150000],
+    'Credit_History': [1],
+    'Late_Payments': [1]
+})
+
+prediction = model.predict(new_customer)
+
+predicted_score = label_encoder.inverse_transform(prediction)
+
+print("\n========== NEW CUSTOMER ==========")
+print(new_customer)
+
+print("\nPredicted Credit Score:",
+      predicted_score[0])
+
+# ------------------------------------------------------------
+# 10. FEATURE IMPORTANCE
+# ------------------------------------------------------------
+
+importance = pd.Series(
+    model.feature_importances_,
+    index=X.columns
+).sort_values(ascending=False)
+
+print("\n========== FEATURE IMPORTANCE ==========")
+print(importance)
+
+plt.figure(figsize=(8, 5))
+importance.plot(kind='bar')
+
+plt.title("Feature Importance")
+plt.xlabel("Features")
+plt.ylabel("Importance")
+plt.xticks(rotation=45)
+
+plt.show()
