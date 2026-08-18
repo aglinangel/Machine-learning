@@ -1,0 +1,210 @@
+# ============================================================
+# COMPARISON OF CLASSIFICATION ALGORITHMS
+# Dataset: Iris Flower Dataset
+# ============================================================
+
+# 1. Import Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Classification Algorithms
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+
+# Evaluation Metrics
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    classification_report
+)
+
+# ============================================================
+# 2. Load Iris Dataset
+# ============================================================
+
+iris = load_iris()
+
+X = iris.data
+y = iris.target
+
+print("Dataset Shape:", X.shape)
+print("Classes:", iris.target_names)
+
+# ============================================================
+# 3. Split Dataset
+# ============================================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+# ============================================================
+# 4. Feature Scaling
+# ============================================================
+
+scaler = StandardScaler()
+
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# ============================================================
+# 5. Define Classification Algorithms
+# ============================================================
+
+models = {
+    "Logistic Regression": LogisticRegression(max_iter=200),
+    "KNN": KNeighborsClassifier(n_neighbors=5),
+    "Naive Bayes": GaussianNB(),
+    "Decision Tree": DecisionTreeClassifier(random_state=42),
+    "Random Forest": RandomForestClassifier(
+        n_estimators=100,
+        random_state=42
+    ),
+    "SVM": SVC(kernel='linear')
+}
+
+# ============================================================
+# 6. Train and Evaluate Models
+# ============================================================
+
+results = []
+
+for name, model in models.items():
+
+    # Use scaled data
+    model.fit(X_train_scaled, y_train)
+
+    # Prediction
+    y_pred = model.predict(X_test_scaled)
+
+    # Evaluation
+    accuracy = accuracy_score(y_test, y_pred)
+
+    precision = precision_score(
+        y_test,
+        y_pred,
+        average='weighted'
+    )
+
+    recall = recall_score(
+        y_test,
+        y_pred,
+        average='weighted'
+    )
+
+    f1 = f1_score(
+        y_test,
+        y_pred,
+        average='weighted'
+    )
+
+    results.append([
+        name,
+        accuracy,
+        precision,
+        recall,
+        f1
+    ])
+
+# ============================================================
+# 7. Display Comparison
+# ============================================================
+
+results_df = pd.DataFrame(
+    results,
+    columns=[
+        "Algorithm",
+        "Accuracy",
+        "Precision",
+        "Recall",
+        "F1-Score"
+    ]
+)
+
+print("\n========== CLASSIFICATION ALGORITHM COMPARISON ==========")
+
+print(
+    results_df.to_string(
+        index=False,
+        formatters={
+            "Accuracy": "{:.2f}".format,
+            "Precision": "{:.2f}".format,
+            "Recall": "{:.2f}".format,
+            "F1-Score": "{:.2f}".format
+        }
+    )
+)
+
+# ============================================================
+# 8. Find Best Algorithm
+# ============================================================
+
+best_model = results_df.loc[
+    results_df["Accuracy"].idxmax()
+]
+
+print("\n========== BEST ALGORITHM ==========")
+print("Algorithm :", best_model["Algorithm"])
+print("Accuracy  :", round(best_model["Accuracy"] * 100, 2), "%")
+print("Precision :", round(best_model["Precision"], 2))
+print("Recall    :", round(best_model["Recall"], 2))
+print("F1-Score  :", round(best_model["F1-Score"], 2))
+
+# ============================================================
+# 9. Visualize Accuracy Comparison
+# ============================================================
+
+plt.figure(figsize=(10, 6))
+
+plt.bar(
+    results_df["Algorithm"],
+    results_df["Accuracy"]
+)
+
+plt.title("Comparison of Classification Algorithms")
+plt.xlabel("Classification Algorithm")
+plt.ylabel("Accuracy")
+
+plt.ylim(0, 1.1)
+plt.xticks(rotation=30)
+
+plt.grid(axis='y')
+plt.show()
+
+# ============================================================
+# 10. Display Detailed Classification Reports
+# ============================================================
+
+print("\n========== DETAILED CLASSIFICATION REPORTS ==========")
+
+for name, model in models.items():
+
+    model.fit(X_train_scaled, y_train)
+
+    y_pred = model.predict(X_test_scaled)
+
+    print("\n----------------------------------------")
+    print(name)
+    print("----------------------------------------")
+
+    print(
+        classification_report(
+            y_test,
+            y_pred,
+            target_names=iris.target_names
+        )
+    )
