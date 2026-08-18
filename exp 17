@@ -1,0 +1,199 @@
+# ============================================================
+# MOBILE PRICE PREDICTION USING MACHINE LEARNING
+# Algorithm: Random Forest Classifier
+# ============================================================
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# ============================================================
+# 1. CREATE MOBILE PHONE DATASET
+# ============================================================
+
+data = {
+    'RAM_GB': [2, 2, 3, 3, 4, 4, 4, 6, 6, 6,
+               8, 8, 8, 12, 12, 12, 4, 6, 8, 12],
+
+    'Storage_GB': [32, 64, 64, 128, 64, 128, 128, 128, 256, 256,
+                   128, 256, 256, 256, 512, 512, 64, 128, 256, 512],
+
+    'Battery_mAh': [3000, 3500, 4000, 4000, 4500, 5000, 4500, 5000,
+                    5000, 4500, 5000, 5000, 6000, 5000, 5000, 6000,
+                    4000, 4500, 5000, 6000],
+
+    'Camera_MP': [8, 12, 12, 16, 16, 20, 24, 32, 48, 48,
+                  48, 50, 64, 64, 108, 108, 16, 32, 64, 108],
+
+    'Screen_inch': [5.0, 5.2, 5.5, 5.5, 6.0, 6.1, 6.2, 6.4,
+                    6.5, 6.5, 6.6, 6.7, 6.7, 6.8, 6.8, 6.9,
+                    6.0, 6.4, 6.7, 6.9],
+
+    # 0 = Budget, 1 = Mid-range, 2 = Premium
+    'Price_Range': [
+        0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+        2, 2, 2, 2, 2, 2, 1, 1, 2, 2
+    ]
+}
+
+df = pd.DataFrame(data)
+
+print("========== MOBILE PRICE DATASET ==========")
+print(df)
+
+# ============================================================
+# 2. SEPARATE INPUT AND OUTPUT
+# ============================================================
+
+X = df.drop('Price_Range', axis=1)
+y = df['Price_Range']
+
+# ============================================================
+# 3. SPLIT DATA INTO TRAINING AND TESTING
+# ============================================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.25,
+    random_state=42,
+    stratify=y
+)
+
+print("\nTraining Samples:", len(X_train))
+print("Testing Samples:", len(X_test))
+
+# ============================================================
+# 4. CREATE RANDOM FOREST MODEL
+# ============================================================
+
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+# Train model
+model.fit(X_train, y_train)
+
+print("\nRandom Forest Model trained successfully!")
+
+# ============================================================
+# 5. PREDICT TEST DATA
+# ============================================================
+
+y_pred = model.predict(X_test)
+
+# ============================================================
+# 6. CALCULATE ACCURACY
+# ============================================================
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\n========== MODEL PERFORMANCE ==========")
+print("Accuracy:", round(accuracy * 100, 2), "%")
+
+# ============================================================
+# 7. CLASSIFICATION REPORT
+# ============================================================
+
+print("\n========== CLASSIFICATION REPORT ==========")
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=[
+            'Budget',
+            'Mid-range',
+            'Premium'
+        ],
+        zero_division=0
+    )
+)
+
+# ============================================================
+# 8. CONFUSION MATRIX
+# ============================================================
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("========== CONFUSION MATRIX ==========")
+print(cm)
+
+plt.figure(figsize=(6, 5))
+
+plt.imshow(cm)
+
+plt.title("Mobile Price Range Classification")
+plt.xlabel("Predicted Class")
+plt.ylabel("Actual Class")
+
+plt.colorbar()
+
+plt.xticks(
+    [0, 1, 2],
+    ['Budget', 'Mid-range', 'Premium']
+)
+
+plt.yticks(
+    [0, 1, 2],
+    ['Budget', 'Mid-range', 'Premium']
+)
+
+plt.show()
+
+# ============================================================
+# 9. PREDICT PRICE RANGE OF A NEW MOBILE
+# ============================================================
+
+new_mobile = pd.DataFrame({
+    'RAM_GB': [8],
+    'Storage_GB': [256],
+    'Battery_mAh': [5000],
+    'Camera_MP': [64],
+    'Screen_inch': [6.7]
+})
+
+prediction = model.predict(new_mobile)
+
+price_range = {
+    0: 'Budget',
+    1: 'Mid-range',
+    2: 'Premium'
+}
+
+print("\n========== NEW MOBILE PREDICTION ==========")
+print(new_mobile)
+
+print(
+    "\nPredicted Mobile Price Range:",
+    price_range[prediction[0]]
+)
+
+# ============================================================
+# 10. FEATURE IMPORTANCE
+# ============================================================
+
+importance = pd.Series(
+    model.feature_importances_,
+    index=X.columns
+).sort_values(ascending=False)
+
+print("\n========== FEATURE IMPORTANCE ==========")
+print(importance)
+
+plt.figure(figsize=(8, 5))
+
+importance.plot(kind='bar')
+
+plt.title("Mobile Price Prediction - Feature Importance")
+plt.xlabel("Features")
+plt.ylabel("Importance")
+
+plt.xticks(rotation=45)
+plt.grid(axis='y')
+
+plt.show()
