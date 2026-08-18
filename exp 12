@@ -1,0 +1,161 @@
+# ============================================================
+# IRIS FLOWER CLASSIFICATION USING K-NEAREST NEIGHBORS (KNN)
+# ============================================================
+
+# 1. Import Libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# ============================================================
+# 2. Load Iris Dataset
+# ============================================================
+
+iris = load_iris()
+
+X = iris.data
+y = iris.target
+
+print("Feature Names:")
+print(iris.feature_names)
+
+print("\nTarget Names:")
+print(iris.target_names)
+
+print("\nDataset Shape:", X.shape)
+
+# ============================================================
+# 3. Split Dataset into Training and Testing Data
+# ============================================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("\nTraining Samples:", len(X_train))
+print("Testing Samples:", len(X_test))
+
+# ============================================================
+# 4. Feature Scaling
+# ============================================================
+
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# ============================================================
+# 5. Create KNN Model
+# ============================================================
+
+k = 5
+
+knn = KNeighborsClassifier(n_neighbors=k)
+
+# Train the model
+knn.fit(X_train, y_train)
+
+print("\nKNN Model Trained Successfully!")
+print("Value of K:", k)
+
+# ============================================================
+# 6. Predict Test Data
+# ============================================================
+
+y_pred = knn.predict(X_test)
+
+# ============================================================
+# 7. Calculate Accuracy
+# ============================================================
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\n========== MODEL PERFORMANCE ==========")
+print("Accuracy:", round(accuracy * 100, 2), "%")
+
+# ============================================================
+# 8. Classification Report
+# ============================================================
+
+print("\n========== CLASSIFICATION REPORT ==========")
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=iris.target_names
+    )
+)
+
+# ============================================================
+# 9. Confusion Matrix
+# ============================================================
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("========== CONFUSION MATRIX ==========")
+print(cm)
+
+plt.figure(figsize=(6, 5))
+plt.imshow(cm)
+
+plt.title("KNN - Iris Flower Classification")
+plt.xlabel("Predicted Class")
+plt.ylabel("Actual Class")
+
+plt.colorbar()
+
+plt.xticks(
+    range(3),
+    iris.target_names
+)
+
+plt.yticks(
+    range(3),
+    iris.target_names
+)
+
+plt.show()
+
+# ============================================================
+# 10. Predict a New Iris Flower
+# ============================================================
+
+# New flower measurements:
+# [Sepal Length, Sepal Width, Petal Length, Petal Width]
+
+new_flower = np.array([[5.9, 3.0, 5.1, 1.8]])
+
+# Scale the new sample
+new_flower_scaled = scaler.transform(new_flower)
+
+# Predict
+prediction = knn.predict(new_flower_scaled)
+
+predicted_flower = iris.target_names[prediction[0]]
+
+print("\n========== NEW FLOWER PREDICTION ==========")
+
+print("Measurements:", new_flower[0])
+
+print("Predicted Iris Flower:", predicted_flower)
+
+# ============================================================
+# 11. Display Prediction Probabilities
+# ============================================================
+
+probability = knn.predict_proba(new_flower_scaled)
+
+print("\nPrediction Probabilities:")
+
+for flower, prob in zip(iris.target_names, probability[0]):
+    print(f"{flower}: {prob * 100:.2f}%")
