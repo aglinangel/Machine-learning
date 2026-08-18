@@ -1,0 +1,182 @@
+# ============================================================
+# FUTURE SALES PREDICTION USING LINEAR REGRESSION
+# ============================================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# ============================================================
+# 1. CREATE SALES DATASET
+# ============================================================
+
+data = {
+    'Month': list(range(1, 25)),
+
+    'Advertising': [
+        10, 12, 14, 15, 18, 20, 22, 24,
+        25, 28, 30, 32, 35, 37, 40, 42,
+        45, 48, 50, 52, 55, 58, 60, 65
+    ],
+
+    'Sales': [
+        105, 115, 125, 130, 145, 155, 165, 175,
+        185, 195, 210, 220, 235, 245, 260, 275,
+        285, 300, 315, 325, 340, 355, 370, 390
+    ]
+}
+
+df = pd.DataFrame(data)
+
+print("========== SALES DATASET ==========")
+print(df)
+
+# ============================================================
+# 2. SELECT INPUT AND OUTPUT
+# ============================================================
+
+X = df[['Month', 'Advertising']]
+y = df['Sales']
+
+# ============================================================
+# 3. SPLIT DATA
+# ============================================================
+
+# Use first 80% for training and last 20% for testing
+split = int(len(df) * 0.8)
+
+X_train = X.iloc[:split]
+X_test = X.iloc[split:]
+
+y_train = y.iloc[:split]
+y_test = y.iloc[split:]
+
+print("\nTraining Samples:", len(X_train))
+print("Testing Samples:", len(X_test))
+
+# ============================================================
+# 4. CREATE AND TRAIN MODEL
+# ============================================================
+
+model = LinearRegression()
+
+model.fit(X_train, y_train)
+
+print("\nLinear Regression Model Trained Successfully!")
+
+# ============================================================
+# 5. PREDICT TEST DATA
+# ============================================================
+
+y_pred = model.predict(X_test)
+
+# ============================================================
+# 6. MODEL EVALUATION
+# ============================================================
+
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+print("\n========== MODEL PERFORMANCE ==========")
+print("MAE :", round(mae, 2))
+print("MSE :", round(mse, 2))
+print("RMSE:", round(rmse, 2))
+print("R2 Score:", round(r2, 4))
+
+# ============================================================
+# 7. ACTUAL VS PREDICTED SALES
+# ============================================================
+
+result = pd.DataFrame({
+    'Month': X_test['Month'].values,
+    'Actual Sales': y_test.values,
+    'Predicted Sales': np.round(y_pred, 2)
+})
+
+print("\n========== ACTUAL VS PREDICTED SALES ==========")
+print(result)
+
+# ============================================================
+# 8. VISUALIZE SALES
+# ============================================================
+
+plt.figure(figsize=(10, 5))
+
+plt.plot(
+    df['Month'],
+    df['Sales'],
+    marker='o',
+    label='Actual Sales'
+)
+
+plt.plot(
+    X_test['Month'],
+    y_pred,
+    marker='x',
+    label='Predicted Sales'
+)
+
+plt.xlabel("Month")
+plt.ylabel("Sales")
+plt.title("Future Sales Prediction")
+plt.legend()
+plt.grid()
+
+plt.show()
+
+# ============================================================
+# 9. PREDICT FUTURE SALES
+# ============================================================
+
+# Predict sales for months 25, 26 and 27
+future_data = pd.DataFrame({
+    'Month': [25, 26, 27],
+    'Advertising': [68, 70, 73]
+})
+
+future_prediction = model.predict(future_data)
+
+future_result = future_data.copy()
+
+future_result['Predicted_Sales'] = np.round(
+    future_prediction,
+    2
+)
+
+print("\n========== FUTURE SALES PREDICTION ==========")
+
+print(future_result)
+
+# ============================================================
+# 10. PLOT FUTURE PREDICTION
+# ============================================================
+
+plt.figure(figsize=(10, 5))
+
+plt.plot(
+    df['Month'],
+    df['Sales'],
+    marker='o',
+    label='Historical Sales'
+)
+
+plt.plot(
+    future_result['Month'],
+    future_result['Predicted_Sales'],
+    marker='x',
+    linestyle='--',
+    label='Future Prediction'
+)
+
+plt.xlabel("Month")
+plt.ylabel("Sales")
+plt.title("Historical and Future Sales Prediction")
+plt.legend()
+plt.grid()
+
+plt.show()
