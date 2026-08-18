@@ -1,0 +1,145 @@
+# ============================================================
+# IRIS FLOWER CLASSIFICATION USING NAIVE BAYES
+# ============================================================
+
+# 1. Import Libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# ============================================================
+# 2. Load Iris Dataset
+# ============================================================
+
+iris = load_iris()
+
+X = iris.data
+y = iris.target
+
+print("Feature Names:")
+print(iris.feature_names)
+
+print("\nTarget Classes:")
+print(iris.target_names)
+
+print("\nDataset Shape:", X.shape)
+
+# ============================================================
+# 3. Split Dataset into Training and Testing
+# ============================================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("\nTraining Samples:", len(X_train))
+print("Testing Samples:", len(X_test))
+
+# ============================================================
+# 4. Create Naive Bayes Model
+# ============================================================
+
+model = GaussianNB()
+
+# Train the model
+model.fit(X_train, y_train)
+
+print("\nNaive Bayes Model Trained Successfully!")
+
+# ============================================================
+# 5. Predict Test Data
+# ============================================================
+
+y_pred = model.predict(X_test)
+
+# ============================================================
+# 6. Calculate Accuracy
+# ============================================================
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\n========== MODEL PERFORMANCE ==========")
+print("Accuracy:", round(accuracy * 100, 2), "%")
+
+# ============================================================
+# 7. Classification Report
+# ============================================================
+
+print("\n========== CLASSIFICATION REPORT ==========")
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=iris.target_names
+    )
+)
+
+# ============================================================
+# 8. Confusion Matrix
+# ============================================================
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("========== CONFUSION MATRIX ==========")
+print(cm)
+
+plt.figure(figsize=(6, 5))
+
+plt.imshow(cm)
+
+plt.title("Naive Bayes - Iris Classification")
+plt.xlabel("Predicted Class")
+plt.ylabel("Actual Class")
+
+plt.colorbar()
+
+plt.xticks(
+    range(3),
+    iris.target_names
+)
+
+plt.yticks(
+    range(3),
+    iris.target_names
+)
+
+plt.show()
+
+# ============================================================
+# 9. Predict a New Iris Flower
+# ============================================================
+
+# [Sepal Length, Sepal Width, Petal Length, Petal Width]
+
+new_flower = np.array([[5.9, 3.0, 5.1, 1.8]])
+
+# Predict
+prediction = model.predict(new_flower)
+
+predicted_flower = iris.target_names[prediction[0]]
+
+print("\n========== NEW FLOWER PREDICTION ==========")
+
+print("Flower Measurements:", new_flower[0])
+
+print("Predicted Iris Flower:", predicted_flower)
+
+# ============================================================
+# 10. Prediction Probability
+# ============================================================
+
+probability = model.predict_proba(new_flower)
+
+print("\n========== PREDICTION PROBABILITY ==========")
+
+for flower, prob in zip(iris.target_names, probability[0]):
+    print(f"{flower}: {prob * 100:.2f}%")
