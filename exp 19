@@ -1,0 +1,174 @@
+# ============================================================
+# BANK LOAN PREDICTION USING NAIVE BAYES CLASSIFIER
+# ============================================================
+
+# 1. Import Libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# ============================================================
+# 2. CREATE BANK LOAN DATASET
+# ============================================================
+
+data = {
+    'Age': [25, 35, 45, 28, 50, 40, 23, 55, 32, 48,
+            30, 60, 27, 43, 38, 52, 29, 41, 56, 24],
+
+    'Income': [30000, 50000, 70000, 35000, 90000, 65000, 25000,
+               100000, 45000, 80000, 40000, 120000, 32000, 75000,
+               55000, 95000, 38000, 68000, 110000, 28000],
+
+    'LoanAmount': [100000, 200000, 300000, 120000, 250000, 200000,
+                   150000, 300000, 180000, 220000, 130000, 350000,
+                   100000, 250000, 180000, 300000, 120000, 200000,
+                   280000, 150000],
+
+    'CreditHistory': [1, 1, 1, 0, 1, 1, 0, 1, 1, 1,
+                      0, 1, 0, 1, 1, 1, 0, 1, 1, 0],
+
+    'LoanTerm': [360, 360, 240, 360, 240, 360, 360, 240, 360, 240,
+                 360, 240, 360, 240, 360, 240, 360, 360, 240, 360],
+
+    # 1 = Loan Approved, 0 = Loan Rejected
+    'LoanStatus': [1, 1, 1, 0, 1, 1, 0, 1, 1, 1,
+                   0, 1, 0, 1, 1, 1, 0, 1, 1, 0]
+}
+
+df = pd.DataFrame(data)
+
+print("========== BANK LOAN DATASET ==========")
+print(df)
+
+# ============================================================
+# 3. SEPARATE INPUT AND OUTPUT
+# ============================================================
+
+X = df.drop('LoanStatus', axis=1)
+y = df['LoanStatus']
+
+# ============================================================
+# 4. SPLIT DATA INTO TRAINING AND TESTING
+# ============================================================
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.25,
+    random_state=42,
+    stratify=y
+)
+
+print("\nTraining Samples:", len(X_train))
+print("Testing Samples:", len(X_test))
+
+# ============================================================
+# 5. CREATE NAIVE BAYES MODEL
+# ============================================================
+
+model = GaussianNB()
+
+# Train model
+model.fit(X_train, y_train)
+
+print("\nNaive Bayes Model Trained Successfully!")
+
+# ============================================================
+# 6. PREDICT TEST DATA
+# ============================================================
+
+y_pred = model.predict(X_test)
+
+# ============================================================
+# 7. CALCULATE ACCURACY
+# ============================================================
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\n========== MODEL PERFORMANCE ==========")
+print("Accuracy:", round(accuracy * 100, 2), "%")
+
+# ============================================================
+# 8. CLASSIFICATION REPORT
+# ============================================================
+
+print("\n========== CLASSIFICATION REPORT ==========")
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=[
+            'Loan Rejected',
+            'Loan Approved'
+        ],
+        zero_division=0
+    )
+)
+
+# ============================================================
+# 9. CONFUSION MATRIX
+# ============================================================
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("========== CONFUSION MATRIX ==========")
+print(cm)
+
+plt.figure(figsize=(6, 5))
+
+plt.imshow(cm)
+
+plt.title("Naive Bayes - Bank Loan Prediction")
+plt.xlabel("Predicted Class")
+plt.ylabel("Actual Class")
+
+plt.colorbar()
+
+plt.xticks(
+    [0, 1],
+    ['Rejected', 'Approved']
+)
+
+plt.yticks(
+    [0, 1],
+    ['Rejected', 'Approved']
+)
+
+plt.show()
+
+# ============================================================
+# 10. PREDICT A NEW LOAN APPLICATION
+# ============================================================
+
+new_customer = pd.DataFrame({
+    'Age': [35],
+    'Income': [70000],
+    'LoanAmount': [200000],
+    'CreditHistory': [1],
+    'LoanTerm': [360]
+})
+
+prediction = model.predict(new_customer)
+
+probability = model.predict_proba(new_customer)
+
+if prediction[0] == 1:
+    result = "Loan Approved"
+else:
+    result = "Loan Rejected"
+
+print("\n========== NEW LOAN PREDICTION ==========")
+
+print(new_customer)
+
+print("\nPrediction:", result)
+
+print("\nPrediction Probability:")
+print("Rejected :", round(probability[0][0] * 100, 2), "%")
+print("Approved :", round(probability[0][1] * 100, 2), "%")
