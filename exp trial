@@ -1,0 +1,44 @@
+# FIND-S Algorithm Implementation
+
+import pandas as pd
+
+# Training dataset
+data = {
+    'Sky': ['Sunny', 'Sunny', 'Rainy', 'Sunny'],
+    'AirTemp': ['Warm', 'Warm', 'Cold', 'Warm'],
+    'Humidity': ['Normal', 'High', 'High', 'High'],
+    'Wind': ['Strong', 'Strong', 'Strong', 'Weak'],
+    'EnjoySport': ['Yes', 'Yes', 'No', 'Yes']
+}
+
+df = pd.DataFrame(data)
+
+print("Training Dataset:")
+print(df)
+
+# FIND-S Algorithm
+def find_s_algorithm(data):
+    hypothesis = None
+
+    # Consider only positive examples
+    for _, row in data.iterrows():
+
+        if row['EnjoySport'] == 'Yes':
+
+            # First positive example
+            if hypothesis is None:
+                hypothesis = list(row[:-1])
+            else:
+                # Compare with existing hypothesis
+                for i in range(len(hypothesis)):
+                    if hypothesis[i] != row.iloc[i]:
+                        hypothesis[i] = '?'
+
+    return hypothesis
+
+
+# Find the most specific hypothesis
+hypothesis = find_s_algorithm(df)
+
+print("\nMost Specific Hypothesis:")
+print(hypothesis)
